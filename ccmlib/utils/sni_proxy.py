@@ -80,7 +80,7 @@ def stop_sni_proxy(docker_id):
     subprocess.check_output(['/bin/bash', '-c', f'docker rm -f {docker_id}'])
 
 
-def configure_sni_proxy(conf_dir, nodes_info, listen_port=443):
+def configure_sni_proxy(conf_dir, nodes_info, listen_port=10443):
     sniproxy_conf_tmpl = dedent("""
         user sniproxy
         pidfile /var/run/sniproxy/sniproxy.pid
@@ -112,12 +112,12 @@ def configure_sni_proxy(conf_dir, nodes_info, listen_port=443):
     return sniproxy_conf_path
 
 
-def start_sni_proxy(conf_dir, nodes_info, listen_port=443):
+def start_sni_proxy(conf_dir, nodes_info, listen_port=10443):
     address, _, _ = list(nodes_info)[0]
     sniproxy_conf_path = configure_sni_proxy(conf_dir, nodes_info, listen_port=listen_port)
     sniproxy_dockerfile = os.path.join(os.path.dirname(__file__), '..', 'resources', 'docker', 'sniproxy')
     subprocess.check_output(['/bin/bash', '-c', f'docker build {sniproxy_dockerfile} -t sniproxy'], universal_newlines=True)
-    docker_id = subprocess.check_output(['/bin/bash', '-c', f'docker run -d --network=host -v {sniproxy_conf_path}:/etc/sniproxy.conf:z -p {listen_port} -it sniproxy'], universal_newlines=True)
+    docker_id = subprocess.check_output(['/bin/bash', '-c', f'docker run -d --network=host -v {sniproxy_conf_path}:/etc/sniproxy.conf:z -p 443:{listen_port} -it sniproxy'], universal_newlines=True)
 
     return docker_id.strip(), address, listen_port
 
